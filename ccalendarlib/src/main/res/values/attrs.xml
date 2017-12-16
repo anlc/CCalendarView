@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CCalendarView">
+        <attr name="c_single_width" format="dimension" />
+        <attr name="c_single_height" format="dimension" />
+        <attr name="c_text_size" format="dimension" />
+        <attr name="c_text_color" format="reference|color" />
+        <attr name="c_lunar_text_size" format="dimension" />
+        <attr name="c_lunar_text_color" format="dimension" />
+
+        <attr name="c_padding_left" format="dimension"/>
+        <attr name="c_padding_right" format="dimension"/>
+        <attr name="c_padding_top" format="dimension"/>
+        <attr name="c_padding_bottom" format="dimension"/>
+    </declare-styleable>
+</resources>

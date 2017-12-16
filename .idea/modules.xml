@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/CCalendarView.iml" filepath="$PROJECT_DIR$/CCalendarView.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ccalendarlib/ccalendarlib.iml" filepath="$PROJECT_DIR$/ccalendarlib/ccalendarlib.iml" />
+    </modules>
+  </component>
+</project>
