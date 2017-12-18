@@ -40,6 +40,28 @@ public class CalendarDateView extends BaseCalendarView {
     private float downY;
     private float downX;
 
+//    private int startIndex = 0;
+//    private Mode mode = Mode.Month;
+//
+//    enum Mode {
+//        Week, Month
+//    }
+//
+//    public void setMode(Mode mode) {
+//        this.mode = mode;
+//        if (isMonthMode()) {
+//            maxTable = 42;
+//            startIndex = 0;
+//        } else {
+//            maxTable = 7;
+//            startIndex = DateUtil.getWeekOfMonth(currentMonthCalendar) * 7;
+//        }
+//    }
+//
+//    public boolean isMonthMode(){
+//        return mode == Mode.Month;
+//    }
+
     private List<Calendar> scheduleDate = new ArrayList<>();
 
     public CalendarDateView(Context context) {
@@ -89,7 +111,7 @@ public class CalendarDateView extends BaseCalendarView {
         currentMonthCalendar = date;
         monthFirstIndex = DateUtil.getFirstDayOfWeek(date) - 1;
         selectPosition = monthFirstIndex;
-        maxTable = getNextMonthStartIndex() <= 35 ? 35 : 42;
+//        maxTable = getNextMonthStartIndex() <= 35 ? 35 : 42;
         invalidate();
     }
 
@@ -254,6 +276,10 @@ public class CalendarDateView extends BaseCalendarView {
     public Calendar getDate() {
         Calendar calendar = DateUtil.getDayInFirst(currentMonthCalendar);
         return DateUtil.addDay(calendar, selectPosition - monthFirstIndex);
+    }
+
+    public int getSelectPosition() {
+        return selectPosition;
     }
 
     private OnCalendarEventListener onCalendarItemClickListener;

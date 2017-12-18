@@ -31,6 +31,13 @@ public class DateUtil {
     }
 
     /**
+     * @return 当前是第几周
+     */
+    public static int getWeekOfMonth(Calendar calendar) {
+        return calendar.get(Calendar.WEEK_OF_MONTH);
+    }
+
+    /**
      * @return 当前日期中的天
      */
     public static int getCurrentDay(Calendar calendar) {
