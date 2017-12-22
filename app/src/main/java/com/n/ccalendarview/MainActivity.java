@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 startActivity(new Intent(this, ViewPagerActivity.class));
                 break;
             case R.id.week:
-                startActivity(new Intent(this, WeekActivity.class));
+                startActivity(new Intent(this, WeekViewActivity.class));
                 break;
         }
     }

@@ -106,9 +106,18 @@ public class DateUtil {
     }
 
     public static int getIntervalMonth(Calendar minDate, Calendar maxDate) {
-        int result = maxDate.get(Calendar.MONTH) - minDate.get(Calendar.MONTH);
-        int month = (maxDate.get(Calendar.YEAR) - minDate.get(Calendar.YEAR)) * 12;
+//        int result = maxDate.get(Calendar.MONTH) - minDate.get(Calendar.MONTH);
+        int result = getMonth(maxDate) - getMonth(minDate);
+        int month = (getYear(maxDate) - getYear(minDate)) * 12;
+//        int month = (maxDate.get(Calendar.YEAR) - minDate.get(Calendar.YEAR)) * 12;
         return Math.abs(month + result);
+    }
+
+    public static int getIntervalWeek(Calendar minDate, Calendar maxDate) {
+        long min = minDate.getTimeInMillis();
+        long max = maxDate.getTimeInMillis();
+        int weeks = (int) (Math.abs(max - min) / (1000 * 60 * 60 * 24 * 7));
+        return weeks;
     }
 
     public static boolean isEquals(Calendar calendar1, Calendar calendar2) {

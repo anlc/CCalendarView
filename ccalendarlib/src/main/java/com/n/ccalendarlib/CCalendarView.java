@@ -12,7 +12,6 @@ import android.support.v4.util.SparseArrayCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -37,14 +36,12 @@ import java.util.List;
 public class CCalendarView extends FrameLayout implements OnCalendarEventListener {
 
     private OnCalendarEventListener onCalendarEventListener;
-    private SparseArrayCompat<Calendar> data;
-    private SparseArrayCompat<CalendarDateView> arrayDateView;
     private FrameLayout titleViewLayout;
     private TextView titleView;
-    private ViewPager viewPager;
+    private MonthViewPager monthViewPager;
+    private WeekViewPager weekViewPager;
     private FrameLayout bottomView;
     private Calendar minDate;
-    private Calendar maxDate;
     private List<Calendar> scheduleCalendars;
 
     public CCalendarView(@NonNull Context context) {
@@ -59,17 +56,17 @@ public class CCalendarView extends FrameLayout implements OnCalendarEventListene
         super(context, attrs, defStyleAttr);
 
         touchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
-        data = new SparseArrayCompat<>();
-        arrayDateView = new SparseArrayCompat<>();
         minDate = DateFactory.create();
-        maxDate = DateFactory.create(DateFormatUtil.parse("2099-12-12"));
 
-        viewPager = new ViewPager(context);
-        addView(viewPager);
+        weekViewPager = new WeekViewPager(context, minDate, this);
+        addView(weekViewPager);
+        monthViewPager = new MonthViewPager(context, minDate, this);
+        addView(monthViewPager);
+
         titleViewLayout = new FrameLayout(context);
         addView(titleViewLayout, LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         addView(new CalendarSubTitleView(context, attrs));
-        bottomView = new FrameLayout(context){
+        bottomView = new FrameLayout(context) {
             @Override
             public boolean onInterceptHoverEvent(MotionEvent event) {
                 return CCalendarView.this.onInterceptHoverEvent(event);
@@ -77,7 +74,6 @@ public class CCalendarView extends FrameLayout implements OnCalendarEventListene
         };
         bottomView.setBackgroundColor(Color.WHITE);
         addView(bottomView);
-        addAdapter();
     }
 
     public void setOnCalendarEventListener(OnCalendarEventListener onCalendarEventListener) {
@@ -86,7 +82,7 @@ public class CCalendarView extends FrameLayout implements OnCalendarEventListene
 
     //设置对应日期下的点
     public void setScheduleDate(List<String> scheduleDate) {
-        scheduleCalendars= new ArrayList<>();
+        scheduleCalendars = new ArrayList<>();
         for (String date : scheduleDate) {
             scheduleCalendars.add(DateFactory.create(date, DateFormatUtil.PATTERN.YYYY_MM_DD));
         }
@@ -94,7 +90,7 @@ public class CCalendarView extends FrameLayout implements OnCalendarEventListene
     }
 
     public void setScheduleDate() {
-        CalendarDateView dateView = arrayDateView.get(viewPager.getCurrentItem());
+        MonthView dateView = monthViewPager.getItem();
         dateView.setScheduleDate(scheduleCalendars);
     }
 
@@ -124,97 +120,23 @@ public class CCalendarView extends FrameLayout implements OnCalendarEventListene
         this.bottomView.addView(bottomView);
     }
 
-    private void addAdapter() {
-        viewPager.setAdapter(new PagerAdapter() {
-            @Override
-            public int getCount() {
-                return DateUtil.getIntervalMonth(minDate, maxDate);
-            }
-
-            @Override
-            public boolean isViewFromObject(View view, Object object) {
-                return view == object;
-            }
-
-            @Override
-            public void destroyItem(ViewGroup container, int position, Object object) {
-                CalendarDateView dateView = (CalendarDateView) object;
-                container.removeView(dateView);
-                arrayDateView.remove(position);
-            }
-
-            @Override
-            public Object instantiateItem(ViewGroup container, int position) {
-                CalendarDateView dateView = generatedItem(position);
-                container.addView(dateView);
-                if (position != 0) {
-                    dateView.setSelectPositionOnFirst();
-                } else {
-                    dateView.setSelectPositionOnToday();
-                }
-                arrayDateView.put(position, dateView);
-                return dateView;
-            }
-        });
-
-        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-                if (position == 0) {
-                    arrayDateView.get(position).setSelectPositionOnToday();
-                } else {
-                    arrayDateView.get(position).setSelectPositionOnFirst();
-                }
-                if (onCalendarEventListener != null) {
-                    onCalendarEventListener.onMonthChanged(position, DateUtil.getDayInFirst(getItem(position)));
-                }
-//                arrayDateView.get(position).measure(0, 0);
-                setScheduleDate();
-                onDayClick(getItem().getSelectPosition(), getItem().getDate());
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-
-            }
-        });
-    }
-
-    private Calendar getItem(int position) {
-        Calendar temp = data.get(position);
-        if (temp != null) {
-            return temp;
-        }
-        Calendar calendar = DateUtil.addMonth(minDate, position);
-        data.put(position, calendar);
-        return calendar;
-    }
-
-    private CalendarDateView generatedItem(int position) {
-        Calendar calendar = DateUtil.addMonth(minDate, position);
-        CalendarDateView dateView = new CalendarDateView(getContext());
-        dateView.setDate(calendar);
-        dateView.setOnCalendarItemClickListener(this);
-        return dateView;
-    }
-
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        View titleLayout = getChildAt(1);
-        View subTitleView = getChildAt(2);
-        View viewPager = getChildAt(0);
-        View bottomView = getChildAt(3);
+        View titleLayout = getChildAt(2);
+        View subTitleView = getChildAt(3);
+        View monthVp = getChildAt(1);
+        View weekVp = getChildAt(0);
+        View bottomView = getChildAt(4);
 
         int titleLayoutHeight = titleLayout.getMeasuredHeight();
         int subTitleHeight = subTitleView.getMeasuredHeight() + titleLayoutHeight;
-        int viewPagerHeight = getItem().getMeasuredHeight() + subTitleHeight;
+        int viewPagerHeight = monthViewPager.getItem().getMeasuredHeight() + subTitleHeight;
+        int weekViewPagerHeight = weekViewPager.getItem().getMeasuredHeight() + subTitleHeight;
+
         titleLayout.layout(left, top, right, titleLayoutHeight);
         subTitleView.layout(left, titleLayoutHeight, right, subTitleHeight);
-        viewPager.layout(left, subTitleHeight, right, viewPagerHeight);
+        monthVp.layout(left, subTitleHeight, right, viewPagerHeight);
+        weekVp.layout(left, subTitleHeight, right, weekViewPagerHeight);
         bottomView.layout(left, viewPagerHeight, right, getMeasuredHeight());
     }
 
@@ -285,6 +207,7 @@ public class CCalendarView extends FrameLayout implements OnCalendarEventListene
                 bottomView.setTranslationY(bottomView.getTranslationY() + dy);
                 translationDateView();
                 mLastY = event.getY();
+                setMonthViewVisible(true);
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
@@ -305,20 +228,16 @@ public class CCalendarView extends FrameLayout implements OnCalendarEventListene
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        swipeHeight = getItem().getMeasuredHeight() - getSingleHeight();
+        swipeHeight = monthViewPager.getItem().getMeasuredHeight() - getSingleHeight();
     }
 
     private int getSingleHeight() {
-        return (int) getItem().getSingleHeight();
-    }
-
-    private CalendarDateView getItem(){
-        return arrayDateView.get(viewPager.getCurrentItem());
+        return (int) monthViewPager.getItem().getSingleHeight();
     }
 
     private void translationDateView() {
         float percent = bottomView.getTranslationY() * 1.0f / swipeHeight;
-        viewPager.setTranslationY(translationDirection * percent);
+        monthViewPager.setTranslationY(translationDirection * percent);
     }
 
     private void animateShow() {
@@ -329,7 +248,7 @@ public class CCalendarView extends FrameLayout implements OnCalendarEventListene
             public void onAnimationUpdate(ValueAnimator animation) {
                 float currentValue = (Float) animation.getAnimatedValue();
                 float percent = currentValue * 1.0f / swipeHeight;
-                viewPager.setTranslationY(translationDirection * percent);
+                monthViewPager.setTranslationY(translationDirection * percent);
             }
         });
         animator.addListener(new AnimatorListenerAdapter() {
@@ -337,6 +256,7 @@ public class CCalendarView extends FrameLayout implements OnCalendarEventListene
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
                 isAnimating = false;
+                setMonthViewVisible(true);
             }
         });
         animator.start();
@@ -350,7 +270,7 @@ public class CCalendarView extends FrameLayout implements OnCalendarEventListene
             public void onAnimationUpdate(ValueAnimator animation) {
                 float currentValue = (Float) animation.getAnimatedValue();
                 float percent = currentValue * 1.0f / swipeHeight;
-                viewPager.setTranslationY(translationDirection * percent);
+                monthViewPager.setTranslationY(translationDirection * percent);
             }
         });
         animator.addListener(new AnimatorListenerAdapter() {
@@ -358,25 +278,45 @@ public class CCalendarView extends FrameLayout implements OnCalendarEventListene
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
                 isAnimating = false;
+                setMonthViewVisible(false);
             }
         });
         animator.start();
+    }
+
+    private void setMonthViewVisible(boolean isShow) {
+        monthViewPager.setVisibility(isShow ? VISIBLE : INVISIBLE);
+        weekViewPager.setVisibility(isShow ? INVISIBLE : VISIBLE);
+    }
+
+    @Override
+    public void onWeekPageChange(int position, Calendar date) {
+        Logger.e("--onWeekPageChange-->" + DateFormatUtil.format(date));
+        monthViewPager.setSelectDate(date);
+    }
+
+    @Override
+    public void onMonthPageChange(int position, Calendar date) {
+        Logger.e("--onMonthPageChange-->" + DateFormatUtil.format(date));
+        weekViewPager.setSelected(date);
     }
 
     @Override
     public void onMonthChanged(int position, Calendar date) {
         setTitle(DateFormatUtil.format(date));
         if (onCalendarEventListener != null) {
-            onCalendarEventListener.onMonthChanged(position, DateUtil.getDayInFirst(getItem(position)));
+            onCalendarEventListener.onMonthChanged(position, DateUtil.getDayInFirst(monthViewPager.getItemDate(position)));
         }
+        Logger.e("--onMonthChanged-->" + DateFormatUtil.format(date));
     }
 
     @Override
     public void onDayClick(int position, Calendar date) {
         setTitle(DateFormatUtil.format(date));
         if (onCalendarEventListener != null) {
-            onCalendarEventListener.onDayClick(position, arrayDateView.get(position).getDate());
+            onCalendarEventListener.onDayClick(position, monthViewPager.getItem(position).getDate());
         }
         translationDirection = position / 7 * getSingleHeight();
+        Logger.e("--onDayClick-->" + DateFormatUtil.format(date));
     }
 }

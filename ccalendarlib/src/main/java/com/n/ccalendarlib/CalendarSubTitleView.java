@@ -11,6 +11,8 @@ import android.util.AttributeSet;
 
 import com.n.ccalendarlib.factory.PaintFactory;
 
+import java.util.Calendar;
+
 public class CalendarSubTitleView extends BaseCalendarView {
 
     private final String[] week = new String[]{"一", "二", "三", "四", "五", "六", "日",};
@@ -43,6 +45,16 @@ public class CalendarSubTitleView extends BaseCalendarView {
     }
 
     @Override
+    protected Calendar calcDate(int index) {
+        return null;
+    }
+
+    @Override
+    protected void setSelectPosition(int index) {
+
+    }
+
+    @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
         for (int i = 0; i < week.length; i++) {
@@ -58,10 +70,6 @@ public class CalendarSubTitleView extends BaseCalendarView {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), (int) (titleHeight + paddingTop));
-    }
-
-    public float getTitleHeight() {
-        return titleHeight;
     }
 
     public int getPaddingLeft() {
